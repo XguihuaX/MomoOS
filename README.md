@@ -11,7 +11,7 @@
 pip install -r requirements.txt
 
 # 启动 Flask 后端 (5001 端口)
-python app.py
+./start.sh 或 python app.py
 ```
 
 ---
