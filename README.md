@@ -150,7 +150,8 @@ pip install -r requirements.txt
 | 各 Agent 实现        | `agents/` 目录下所有模块                    |
 
 ---
-
+## 备注：
+目前alarm在服务器端是废案，qq_bot在进行中
 ## 结言
 
 该项目是一个成熟的多 Agent + 多模态合作设计，适合作为本地 AI 语音/定时/助理型应用的基础库，其构成性、分层性和抽象级别明确。
