@@ -15,103 +15,47 @@ pip install -r requirements.txt
 ```
 
 ---
+🎙 用户输入（文本或语音）
+│
+├──> 🌐 /api/dispatch（app.py）
+│     ├─ 如果是语音 → 🔊 /api/asr（asr_server.py） → 返回文本
+│     └─ 构建标准消息 → 📦 build_message（mcp_message.py）
+│
+├──> 🧠 PlannerAgent.handle（PlannerAgent.py）
+│     ├─ 调用 DeepSeek → core/llm/deepseek_api.py
+│     └─ 解析指令为任务调用链
+│
+├──> 多个 Agent 被调用（根据 planner 输出）
+│     ├─ 🗂 MemoryAgent.handle → 操作数据库（model.py + services.py）
+│     ├─ 🛠 ToolAgent.handle → 操作 toolbox.py（播放音乐、播报、角色切换）
+│     ├─ 🌐 SearchAgent.handle → 执行联网查询（如天气）
+│     └─ 💬 ChatAgent.handle → 调用 qwen_api.py 生成文本
+│
+├──> 合成语音：
+│     └─ 🗣 generate_audio.py（调用 GPT-SoVITS 本地推理服务）
+│
+└──> 📤 返回结果：
+      JSON 格式 = {"character": "...", "text": "...", "audio": Base64音频}
 
-## 🔧 核心流程说明
 
-### 用户需求（输入语音/文本）
+-----------
+📁 代码位置快速索引（可写在 README 最后）
+功能	文件路径
+Flask 启动	app.py
+MCP 构建格式	core/message/mcp_message.py
+ASR 模块	core/audio/asr_server.py
+TTS 合成	core/audio/generate_audio.py
+Prompt 构建	core/llm/prompt_builder.py
+Prompt 实现 core/llm/prompt_state.py
+LLM API（DeepSeek）	core/llm/deepseek_api.py
+LLM API（通义）	core/llm/qwen_api.py
+短期记忆缓存	core/short_memory/memory_buffer.py
+数据模型	database/model.py
+数据服务操作	database/services.py
+定时器调度	database/scheduler.py
+工具函数	utils/toolbox.py
+各 Agent 实现	agents/ 目录下七个模块
 
-* `/api/dispatch` 接收用户请求，判断是 **语音输入** 还是 **文本输入**
-* 如果是语音：保存文件，传入 `/api/asr`，调用 Faster-Whisper 转成文本
-
-### 调度器处理
-
-* 通过 MCP 协议打包为规范化消息
-* 调用 `PlannerAgent` 解析意图，根据 DeepSeek 生成多 Agent 调用计划：
-
-  * MemoryAgent: 操作记忆/任务
-  * ToolAgent: 切换角色/操作本地应用
-  * SearchAgent: 联网搜索
-* 后续给 ChatAgent 进行最终展示
-
-### 回复生成 + 语音合成
-
-* ChatAgent 采用 `qwen-plus` 生成文本回复
-* 后续传入 `/api/tts`，调用 GPT-SoVITS API 进行合成
-* 同时进行简单情绪分析，返回 Base64 音频 + 角色信息
-
-### 需要时间触发
-
-* 所有 `add_todo`任务，创建后自动被 `scheduler.py` 扫描和定时 trigger
-* 到点后调用 `/api/tts` + `say` 操作播放声音
-
----
-
-## 🤖 Agent 体系
-
-| Agent          | 作用                                       |
-| -------------- | ---------------------------------------- |
-| `PlannerAgent` | 识别用户 intent，生成规范化调度列表                    |
-| `MemoryAgent`  | 操作 memory / personality / todo 数据，进行综合维护 |
-| `ToolAgent`    | 调用 toolbox.py 本地功能，如播放音乐，切换角色            |
-| `SearchAgent`  | 联网搜索 (日期/天气)                             |
-| `ChatAgent`    | 体环，构造文本回复，进行 TTS                         |
-
----
-
-## 📄 数据库表设计
-
-### `users`
-
-* user\_id (PK)
-* created\_at
-
-### `memory`
-
-* id, user\_id (FK), role, type, content, created\_at
-
-### `personality`
-
-* (user\_id, type, tag) 为联合 PK
-* content
-
-### `todos`
-
-* id, user\_id, owner\_type, title, due\_time, status, description
-
----
-
-## 📊 短期记忆系统
-
-* 保存最近 50 条记录 (role + text)
-* 在 ChatAgent / MemoryAgent / ToolAgent 中使用
-* 可通过 `clear_short_term(user_id)` 清空
-
----
-
-## 🎧 语音功能模块
-
-### ASR
-
-* 基于 Faster-Whisper
-* 16kHz 单声道标准化，自动转简体
-
-### TTS
-
-* 基于 GPT-SoVITS API
-* 支持角色预设、prompt文本、情绪控制
-
----
-
-## 🚧 本地功能 (系统/GUI)
-
-ToolAgent 通过 `toolbox.py` 调用以下功能：
-
-* 操作 macOS 通知
-* 播放语音提醒
-* 操作等 pyautogui 应用 (ex: 播放音乐)
-* 切换聊天角色
-
----
 
 ## 结言
 
