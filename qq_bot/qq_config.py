@@ -1,0 +1,4 @@
+
+MIRAI_API_BASE = "http://localhost:8080"
+QQ_ID = 1643486651
+VERIFY_KEY= 'INITKEYNXhmFGoa'
