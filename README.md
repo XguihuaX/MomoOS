@@ -152,14 +152,9 @@ pip install -r requirements.txt
 ---
 
 ## 计划：
-模块方向	简述目标
-5🎭 2D Live 看板娘接入	使用 Unity 显示角色表情、嘴型、动作，与语音联动；通过 WebSocket 实时控制。 /n                        
-2🧠 Agent部分 ，继续更新，向着crewAi 和mnn chat （crewAi 为主，MNN chat 参考其轻量化设计）         （手搓版就是已经差不多了，后续需要优化结构和逻辑）
-3💬 前端 UI 优化	完善多端聊天界面（桌面/移动），包含角色头像、情绪切换按钮、气泡语音动画等。
-2🛠 ToolAgent 功能拓展	增加更多本地系统调用能力：如定时任务、应用控制、角色切换、自定义声音等。
-2🔐 用户数据隔离与安全控制	
-4🕸 图数据库与知识图谱系统	将 memory/personality/todo 等存储转为图结构（如 neo4j），支持结构化检索与可视关系图分析。 （如果要改就得早一些，不然后期要大改）
-5🎙 实时语音唤醒（Wake Word Detection）
+## 🛣 项目路线图（Roadmap）
+
+本项目的开发计划与阶段请查看 👉 [MomoOS Roadmap 看板](https://github.com/users/XguihuaX/projects/1)
 
 
 ## 备注：
