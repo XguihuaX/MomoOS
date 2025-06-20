@@ -1,48 +1,12 @@
 import requests
 import os
 import subprocess
-from pydub import AudioSegment
 from pathlib import Path
+from pydub import AudioSegment
 
-SOVITS_API = "http://127.0.0.1:9880/"
+REMOTE_API = "http://117.50.190.72:8000/infer_single"
 SAVE_DIR = "../../audio"
 os.makedirs(SAVE_DIR, exist_ok=True)
-
-
-def get_reference_audio_path(rel_path: str) -> str:
-    """
-    根据给定的相对路径构造参考音频的绝对路径。
-    明确 base 路径，避免 __file__ 带来的问题。
-    """
-    base_dir = Path("/workspace/ai_project/tts_model")  # ✅ 显式指定 base 路径
-    full_path = base_dir / Path(rel_path)
-    return str(full_path.resolve())
-
-VOICE_PRESETS = {
-    "八重神子默认": {
-        "refer_wav_path": get_reference_audio_path("v4/八重神子_ZH/reference_audios/中文/emotions/【默认】嗨，小家伙们，你们来了呀。不错，很准时。.wav"),
-        "prompt_text": "嗨，小家伙们，你们来了呀。不错，很准时。",
-        "prompt_language": "zh"
-    },
-    "凝光默认": {
-        "refer_wav_path": get_reference_audio_path(
-            "/Users/liujunhong/Desktop/program/model/v4/凝光_ZH/reference_audios/中文/emotions/【默认】我打算新做一套棋盘和棋子，内容就从前段时间的那场大战改编而来。.wav"),
-        "prompt_text": "我打算新做一套棋盘和棋子，内容就从前段时间的那场大战改编而来。",
-        "prompt_language": "zh"
-    },
-    "神里绫华默认": {
-        "refer_wav_path": get_reference_audio_path(
-            "v4/神里绫华_ZH/reference_audios/中文/emotions/【默认】看来，你们能理解我的心情了，既然这样，不知能否再考虑一下….wav"),
-        "prompt_text": "看来，你们能理解我的心情了，既然这样，不知能否再考虑一下…",
-        "prompt_language": "zh"
-    },
-    "荧默认": {
-        "refer_wav_path": get_reference_audio_path("v4/荧_ZH/reference_audios/中文/emotions/【默认】是那种情况吧，时间的流动在同一天不断循环着。.wav"),
-        "prompt_text": "是那种情况吧，时间的流动在同一天不断循环着。",
-        "prompt_language": "zh"
-    },
-}
-
 def normalize_wav(path: str):
     try:
         audio = AudioSegment.from_file(path)
@@ -52,52 +16,55 @@ def normalize_wav(path: str):
     except Exception as e:
         print(f"[⚠️] 音频标准化失败：{e}")
 
-def play_audio(path: str):
-    try:
-        subprocess.run(["afplay", path])
-    except Exception as e:
-        print(f"[⚠️] 播放失败：{e}")
 
-def generate_audio(text: str, emotion: str = "八重神子默认", filename: str = "output") -> str:
+def generate_audio(
+    text: str,
+    model_name: str,
+    emotion: str = "默认",
+    lang: str = "中文",
+    play: bool = True
+) -> str:
     if not text.strip():
         raise ValueError("文本不能为空！")
 
-    if emotion not in VOICE_PRESETS:
-        raise ValueError(f"未知的情绪标签：{emotion}")
-
-    preset = VOICE_PRESETS[emotion]
     payload = {
-        **preset,
+        "version": "v4",
+        "model_name": model_name,
+        "emotion": emotion,
         "text": text,
-        "text_language": "zh",
-        "cut_punc": "，。",
-        "top_k": 20,
-        "top_p": 0.7,
-        "temperature": 0.8,
-        "speed": 1.0,
-        "sample_steps": 32,
-        "if_sr": False,
-        "language": "zh",
-        "style": "neutral",
-        "sdp_ratio": 0.2,
+        "text_lang": lang,
+        "prompt_text_lang": "中文"
     }
 
-    response = requests.post(SOVITS_API, json=payload, stream=True)
+    print("[📤] 请求 payload：", payload)
+    response = requests.post(REMOTE_API, json=payload)
     if response.status_code != 200:
         raise RuntimeError(f"语音合成失败，状态码：{response.status_code}")
 
-    if filename.endswith(".wav") or filename.startswith("/"):
-        output_path = filename
-    else:
-        output_path = os.path.join(SAVE_DIR, f"{filename}_{emotion}.wav")
+    result = response.json()
+    print("[🌐] 接口完整返回内容：", result)
+    audio_url = result.get("audio_url")
+    if audio_url and audio_url.startswith("http://0.0.0.0"):
+        audio_url = audio_url.replace("0.0.0.0", "117.50.190.72")
 
+    if not audio_url:
+        raise RuntimeError("接口未返回有效 audio_url")
+
+    audio_response = requests.get(audio_url)
+    if audio_response.status_code != 200:
+        raise RuntimeError(f"音频下载失败：{audio_response.status_code}")
+
+    # 用 model_name 作为保存文件名，避免重复角色名混淆
+    sanitized_name = model_name.replace("/", "_")
+    output_path = os.path.join(SAVE_DIR, f"output_{sanitized_name}.wav")
     with open(output_path, "wb") as f:
-        for chunk in response.iter_content(chunk_size=8192):
-            f.write(chunk)
+        f.write(audio_response.content)
 
     normalize_wav(output_path)
     print(f"[✅] 合成完成，保存路径：{output_path}")
 
-    play_audio(output_path)  # ✅ 自动播放
+
     return output_path
+
+
 
