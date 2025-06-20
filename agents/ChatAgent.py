@@ -30,16 +30,14 @@ class ChatAgent(BaseAgent):
 
             try:
                 cfg = prompt_manager.get_prompt(user_id)
+                
                 system_prompt = cfg["system_prompt"]
-                emotion = cfg["default_emotion"]
+                model_name= cfg["model_name"]
+                emotion = cfg["emotion"]
                 character = cfg["character_id"]
                 logger.info("[ChatAgent] 当前角色配置：%s", character)
             except Exception as e:
                 logger.error("[ChatAgent] 获取角色配置出错：%s", str(e))
-            #cfg = prompt_manager.get_prompt()
-            #system_prompt = cfg["system_prompt"]
-            #emotion = cfg["default_emotion"]
-            #print("[ChatAgent] 当前角色配置：", emotion)  # 加这一行
 
             
             llm_reply = call_qwen(
@@ -54,7 +52,9 @@ class ChatAgent(BaseAgent):
             g.timer.mark("chatAgent完成")
             tts_response = requests.post("http://127.0.0.1:5001/api/tts", json={
                 "text": llm_reply,
-                "emotion": emotion
+                "emotion": emotion,
+                "model_name": model_name,
+                "lang": "中文"
             })
             g.timer.mark("语音合成完成")
 
