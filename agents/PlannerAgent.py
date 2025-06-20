@@ -4,67 +4,80 @@ from datetime import datetime
 import re
 import logging
 from core.llm.deepseek_api import call_deepseek
+from core.llm.qwen_api import call_qwen
 from core.short_memory.memory_buffer import add_to_short_term
 from flask import g
-
+import concurrent.futures
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
+NO_WAIT_FUNCTIONS = {"add_memory", "add_personality","add_todo","delete_memory","delete_personality", "delete_todo",}
+
 class PlannerAgent:
     def __init__(self, registry):
         self.registry = registry
+        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=5)
+
+    def is_no_wait(self, agent_name, payload):
+        func = payload.get("function")
+        return func in NO_WAIT_FUNCTIONS
+
 
     def handle(self, message: dict) -> dict:
         g.timer.mark("进入plannerAgent")
-        user_id = message.get("payload", {}).get("user_id", "default") # fallback 为 "default" 可选
+
+        user_id = message.get("payload", {}).get("user_id", "default")
         user_text = message.get("payload", {}).get("text", "")
         add_to_short_term(user_id, "user", user_text)
-        plan = self._llm_plan(user_text,user_id)
-        logger.info("PlannerAgent]:plan: %s", plan)
+
+        plan = self._llm_plan(user_text, user_id)
+        logger.info("plan: %s", plan)
+
         message["payload"].setdefault("results", [])
         g.timer.mark("plannerAgent调用完成,开始分配任务")
+
         for agent_entry in plan:
             agent_name = agent_entry.get("agent", "")
-            if agent_name not in ["MemoryAgent", "ToolAgent", 'SearchAgent']:
-                logger.warning("[PlannerAgent] 非法 Agent 名称: %s", agent_name)
+            payload = agent_entry.get("payload", {})
+
+            if agent_name not in ["MemoryAgent", "ToolAgent", "SearchAgent"]:
+                logger.warning("非法 Agent 名称: %s", agent_name)
                 continue
+
             agent = self.registry.get(agent_name)
             if not agent:
-                logger.warning("[PlannerAgent] 未注册的 Agent: %s", agent_name)
+                logger.warning("未注册的 Agent: %s", agent_name)
                 continue
 
-            start_time = time.time()
-            try:
-                task_message = {
-                    "agent": agent_name,
-                    "payload": agent_entry.get("payload", {})
-                }
-                result = agent.handle(task_message)
-                duration = time.time() - start_time
+            task_message = {"agent": agent_name, "payload": payload}
 
-                agent_result = {
-                    "agent": agent_name,
-                    "status": "success",
-                    "execution_time": round(duration, 3),
-                    "raw_response": result.get("payload", {})
-                }
-                message["payload"]["results"].append(agent_result)
-                logger.info("[plannerAgent]: result_message: %s", message)
+            if self.is_no_wait(agent_name, payload):
+                logger.info(f"{payload}添加到并发")
+                self.executor.submit(agent.handle, task_message)
+            else:
+                try:
+                    g.timer.mark(f"{agent_name}_开始")
+                    result = agent.handle(task_message)
+                    g.timer.mark(f"{agent_name}_结束")
 
-            except Exception as e:
-                duration = time.time() - start_time
-                error_result = {
-                    "agent": agent_name,
-                    "status": "error",
-                    "execution_time": round(duration, 3),
-                    "raw_response": {"error": str(e)}
-                }
-                message["payload"]["results"].append(error_result)
-                logger.error("[PlannerAgent] Agent 处理异常: %s", e)
+                    message["payload"]["results"].append({
+                        "agent": agent_name,
+                        "status": "success",
+                        "raw_response": result.get("payload", {})
+                    })
+                except Exception as e:
+                    message["payload"]["results"].append({
+                        "agent": agent_name,
+                        "status": "error",
+                        "raw_response": {"error": str(e)}
+                    })
+                    logger.error("Agent 处理异常: %s", e)
 
         return self.registry.get("ChatAgent").handle(message)
+
+
 
     def _llm_plan(self, user_text: str,user_id:str) -> list:
         now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -143,6 +156,11 @@ class PlannerAgent:
         query是用户的原query
         '''
 
+
+
+
+
+
         instruction=f'''
         请根据以下步骤完成判断与生成：
         1. 首先判断需要调用哪些 Agent：
@@ -157,6 +175,11 @@ class PlannerAgent:
         3. user_id应是当前实际用户id，当前的实际用户是：{user_id}
         
         4.给出的消息不得使用注释（如 // 或 #），输出必须为合法 JSON 格式 '''.format(now_str = now_str,user_id=user_id)
+
+
+
+
+
 
         few_shot = """
         以下是示例：
@@ -291,9 +314,11 @@ class PlannerAgent:
             }
         ]
         """
+
         full_prompt = f"{system_prompt}\n\n{instruction}\n\n{few_shot}"
 
-        reply = call_deepseek(user_message=user_text, system_prompt=full_prompt)
+        #reply = call_deepseek(user_message=user_text, system_prompt=full_prompt)
+        reply = call_qwen(user_message=user_text, system_prompt=full_prompt)
         try:
             match = re.search(r"```json\s*(.*?)\s*```", reply, re.DOTALL)
             json_text = match.group(1) if match else reply.strip()
@@ -304,10 +329,10 @@ class PlannerAgent:
             if isinstance(plan, list) and all(isinstance(x, dict) and "agent" in x for x in plan):
                 return plan
             else:
-                print("[PlannerAgent] 返回内容格式不正确:", plan)
+                logger.error("返回内容格式不正确:", plan)
 
         except Exception as e:
-            print(f"[PlannerAgent] 解析 LLM 返回失败: {e} | 原始返回: {reply}")
+            logger.error(f"解析 LLM 返回失败: {e} | 原始返回: {reply}")
 
         return []
 
