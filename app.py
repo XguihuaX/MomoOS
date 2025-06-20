@@ -49,14 +49,22 @@ def api_asr():
 def api_tts():
     data = request.get_json()
     agent_reply = data.get("text")
-    emotion = data.get("emotion", "八重神子默认")
+    model_name = data.get("model_name")
+    emotion = data.get("emotion", "默认")
+    lang = data.get("lang","中文")
 
     if not agent_reply:
         return jsonify({"error": "缺少 text 参数"}), 400
 
     try:
         temp_path = f"/tmp/temp_{uuid.uuid4().hex}.wav"
-        output_path = generate_audio(text=agent_reply, emotion=emotion, filename=temp_path)
+        output_path = generate_audio(
+            text=agent_reply,
+            model_name=model_name,
+            emotion=emotion,
+            lang=lang,
+            play=True
+        )
 
         with open(output_path, "rb") as f:
             audio_data = f.read()
