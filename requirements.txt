@@ -1,0 +1,11 @@
+faster_whisper==1.1.1
+Flask==3.1.1
+flask_cors==6.0.1
+flask_sqlalchemy==3.1.1
+loguru==0.7.3
+opencc==1.1.9
+pyautogui==0.9.54
+pydub==0.25.1
+Requests==2.32.4
+SQLAlchemy==2.0.41
+audioop-lts
