@@ -1,8 +1,12 @@
 # agents/SearchAgent.py
-from core.llm.qwen_api import call_qwen
+from ..core.llm.qwen_api import call_qwen
+from ..type_hints.request_type import MCPInvokeRequest
+from ..type_hints.result_type import MCPResult
+from ..type_hints.interfaces import IAgent
 
-class SearchAgent:
-    def handle(self, message: dict) -> dict:
+class SearchAgent(IAgent):
+    
+    def handle(self, message: MCPInvokeRequest) -> MCPResult:
         query = message.get("payload", {}).get("query", "")
         print(f"[SearchAgent] 查询请求: {query}")
 
@@ -12,21 +16,7 @@ class SearchAgent:
                 system_prompt="",      # 关键：不加任何角色设定
                 model="qwen-plus"
             )
-            return {
-                "status": "success",
-                "agent": "SearchAgent",
-                "payload": {
-                    "text": reply,
-                    "tool_result": reply
-                }
-            }
+            return MCPResult(status="success", mcp_type="command", payload={"tool_result": reply})
 
         except Exception as e:
-            return {
-                "status": "error",
-                "agent": "SearchAgent",
-                "payload": {
-                    "text": f"搜索失败: {e}",
-                    "tool_result": ""
-                }
-            }
+            return MCPResult(status="error", mcp_type="command", payload={"error": f"搜索失败，发生错误: {e}"})

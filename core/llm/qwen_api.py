@@ -1,8 +1,5 @@
 import requests
-import os
-
-QWEN_API_KEY = "sk-c572ecd9afbc425babb5b8edf8c5ec0d"
-QWEN_API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
+from ..constants import QWEN_API_KEY, QWEN_API_URL
 
 def call_qwen(user_message, system_prompt="", model="qwen-plus", enable_search=True):
     """

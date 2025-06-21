@@ -5,8 +5,8 @@ from utils.timer import Timer
 from database.init import db
 from database import scheduler
 import utils.toolbox as toolbox
-from agents.AgentRegistry import AgentRegistry
-from agents.PlannerAgent import PlannerAgent
+from ..agents.AgentRegistry import AgentRegistry
+from ..agents.PlannerAgent import PlannerAgent
 from core.audio.generate_audio import generate_audio
 from core.audio.asr_server import recognize_audio
 from core.message.mcp_message import build_message
@@ -93,7 +93,7 @@ def api_dispatch():
             asr_result = response.json().get("text", "")
             print(f"[ASR@Dispatch] 识别内容: {asr_result}")
             user_id = request.form.get("user_id","错误")
-            message = build_message(payload={"text": asr_result, "user_id": user_id})
+            message = build_message(status="success", payload={"text": asr_result, "user_id": user_id})
             return handle_frontend(message)
 
         except Exception as e:
@@ -107,7 +107,7 @@ def api_dispatch():
         if not isinstance(data, dict) or "text" not in data:
             return jsonify({"error": "请求格式错误：必须包含 'text'" }), 400
         user_id = data.get("user_id","错误")  # 默认值可保留，防止缺失
-        message = build_message(payload={"text": data["text"], "user_id": user_id})
+        message = build_message(status="success", payload={"text": data["text"], "user_id": user_id})
         return handle_frontend(message)
 
     elif source == "alarm":
@@ -142,7 +142,7 @@ def handle_alarm(data):
     }
 
     chat_agent = planner.registry.get("ChatAgent")
-    result = chat_agent.handle(message)
+    result = chat_agent.handle(message) # type: ignore
     return jsonify({
         "text": result.get("payload", {}).get("text", ""),
         "audio": result.get("payload", {}).get("audio", None)
@@ -152,7 +152,7 @@ def handle_alarm(data):
 def on_exit():
     print("[退出] 应用关闭，正在执行记忆总结...")
     try:
-        registry.get("MemoryAgent").summarize_and_save()  # ✅ 不传 user_id
+        registry.get("MemoryAgent").summarize_and_save()  # ✅ 不传 user_id # type: ignore
     except Exception as e:
         print("[退出] 总结失败:", e)
 
@@ -160,13 +160,17 @@ def handle_shutdown(signum, frame):
     print(f"[信号] 收到退出信号 ({signum})，即将关闭应用...")
     sys.exit(0)
 
-# ----------- 启动应用 ------------
-if __name__ == "__main__":
+def main_run(host: str = "localhost", port: int = 5001) -> None:
+    """ 启动服务 """
     #with app.app_context():
-        #scheduler.start_scheduler()    #后续修改闹钟的时候一起改
-
+        #scheduler.start_scheduler()
     atexit.register(on_exit)
     signal.signal(signal.SIGINT, handle_shutdown)
     signal.signal(signal.SIGTERM, handle_shutdown)
 
-    app.run(host="0.0.0.0", port=5001)
+    app.run(host=host, port=port)
+
+# ----------- 启动应用 ------------
+if __name__ == "__main__":
+
+    main_run()

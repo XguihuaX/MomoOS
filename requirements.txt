@@ -299,3 +299,4 @@ xxhash==3.5.0
 xyzservices==2025.1.0
 yapf==0.43.0
 yarl==1.19.0
+loguru
