@@ -2,13 +2,13 @@
 from ..type_hints.interfaces import IAgent
 from ..type_hints.request_type import MCPInvokeRequest
 from ..type_hints.result_type import MCPResult
-from core.llm.qwen_api import call_qwen
-from core.message.mcp_message import build_message
-from core.short_memory.memory_buffer import add_to_short_term,get_short_term
-import requests
-from core.llm.prompt_state import prompt_manager
-from flask import g
+from ..core.llm.qwen_api import call_qwen
+from ..core.message.mcp_message import build_message
+from ..core.short_memory.memory_buffer import add_to_short_term,get_short_term
+from ..core.llm.prompt_state import prompt_manager
 from ..core.logger import logger
+import requests
+from flask import g
 
 class ChatAgent(IAgent):
 

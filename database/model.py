@@ -1,6 +1,5 @@
 # backend/models.py
-from database.init import db
-from flask_sqlalchemy import SQLAlchemy
+from ..database.init import db
 from datetime import datetime
 from sqlalchemy import Enum as SQLAEnum
 import enum

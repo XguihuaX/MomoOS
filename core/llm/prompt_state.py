@@ -1,6 +1,6 @@
 # prompt_state.py
 from collections import defaultdict
-from core.llm.prompt_builder import CHARACTER_CONFIG, build_prompt
+from .prompt_builder import CHARACTER_CONFIG, build_prompt
 
 class PromptManager:
     def __init__(self):

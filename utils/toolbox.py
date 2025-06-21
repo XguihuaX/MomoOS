@@ -90,7 +90,7 @@ class NeteaseMusicController:
 
 
 ### ---------- ChatAgent角色 相关操作----------###
-from core.llm.prompt_state import prompt_manager
+from ..core.llm.prompt_state import prompt_manager
 
 def switch_character(character_id: str, user_id: str) -> str:
     success = prompt_manager.switch_character(user_id, character_id)
@@ -139,7 +139,7 @@ def alarm(text: str):
     print(f"[提醒触发 - say 播报中] {text}")
 
 
-from core.short_memory.memory_buffer import clear_short_term as _clear
+from ..core.short_memory.memory_buffer import clear_short_term as _clear
 
 def clear_short_term(user_id: str) -> str:
     _clear(user_id)

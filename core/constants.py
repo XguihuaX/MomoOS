@@ -1,4 +1,7 @@
 """ 常量 """
+from pathlib import Path
+
+ASR_MODEL_PATH = Path(__file__).parent.parent / "asr_model" / "faster-whisper-small" / "536b0662742c02347bc0e980a01041f333bce120"
 
 ### apis ###
 DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions"

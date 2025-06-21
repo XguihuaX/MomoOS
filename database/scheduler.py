@@ -1,12 +1,10 @@
-from datetime import datetime,timedelta
-from database.services import search_todo
-from ..server.flask_app import app
+from datetime import datetime, timedelta
 from threading import Timer
-
-from database.model import OwnerTypeEnum, StatusEnum
+from .model import OwnerTypeEnum, StatusEnum
 
 
 def scan_pending_todos():
+    from .services import search_todo
     print("scheduler:正在重新扫描当日日程")
     now = datetime.now()
     tomorrow_start = datetime(now.year, now.month, now.day) + timedelta(days=1)
@@ -49,6 +47,8 @@ def start_scheduler():
 
 
 def trigger_todo(todo_id: int):
+    from ..server.flask_app import app
+
     with app.app_context():  # ✅ 显式包一层
         from database.services import change_todo, search_todo
         import base64, tempfile, requests, subprocess
