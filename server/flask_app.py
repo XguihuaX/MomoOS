@@ -1,15 +1,17 @@
+""" Flask框架的服务器实现 """
+from ..core.exec_hook import set_exechook
+set_exechook()
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os, atexit, signal, sys, uuid, base64, requests
 from utils.timer import Timer
-from database.init import db
-from database import scheduler
+from ..database.init import db
 import utils.toolbox as toolbox
 from ..agents.AgentRegistry import AgentRegistry
 from ..agents.PlannerAgent import PlannerAgent
-from core.audio.generate_audio import generate_audio
-from core.audio.asr_server import recognize_audio
-from core.message.mcp_message import build_message
+from ..core.audio.generate_audio import generate_audio
+from ..core.audio.asr_server import recognize_audio
+from ..core.message.mcp_message import build_message
 from flask import g
 # 初始化
 registry = AgentRegistry()
