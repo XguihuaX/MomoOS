@@ -1,4 +1,4 @@
-
+""" Flask框架的服务器实现 """
 from ..core.exec_hook import set_exechook
 set_exechook()
 from flask import Flask, request, jsonify

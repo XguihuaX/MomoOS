@@ -1,6 +1,6 @@
 from datetime import datetime,timedelta
 from database.services import search_todo
-from ..server.app import app
+from ..server.flask_app import app
 from threading import Timer
 
 from database.model import OwnerTypeEnum, StatusEnum
