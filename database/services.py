@@ -1,8 +1,10 @@
 from ..database.model import Todo, Memory, personality, User, OwnerTypeEnum, StatusEnum, Memory_role, Memory_type,personality_type
 from ..database.init import db
 from ..database.scheduler import start_scheduler
-from typing import Optional
+from typing import Optional,List
 from datetime import datetime
+from ..core.logger import logger
+import uuid
 
 #todo_update_debouncer = Debouncer(3)
 ###------todo--------##
@@ -299,30 +301,41 @@ def change_personality(user_id: str, type: personality_type, tag: str, content: 
 
 
 #-----user--------------#
-def add_user(user_id: str) -> bool:
+def create_user(user_name: str) -> User:
+    """
+    创建新用户，自动生成 user_id，create_time 由数据库填充。
+    """
     try:
-        exists = db.session.query(User).filter_by(user_id=user_id).first()
-        if exists:
-            return False  # 已存在
-        user = User(user_id=user_id)
+        user = User(
+            user_id=str(uuid.uuid4()),
+            user_name=user_name
+            # 不传 create_time，让数据库自动填充
+        )
         db.session.add(user)
         db.session.commit()
-        return True
+        return user
     except Exception as e:
         db.session.rollback()
         raise e
+
 
 
 def get_user_by_id(user_id: str) -> Optional[User]:
     return db.session.query(User).filter_by(user_id=user_id).first()
 
 
-def get_all_users() -> list[User]:
-    return db.session.query(User).order_by(User.created_at.desc()).all()
-
+def get_all_users() -> List[User]:
+    """
+    获取所有用户，按创建时间倒序排列。
+    """
+    return db.session.query(User).order_by(User.create_time.desc()).all()
 
 
 def delete_user(user_id: str) -> bool:
+    """
+    删除指定 user_id 对应的用户记录。
+    返回删除成功与否。
+    """
     try:
         user = db.session.query(User).filter_by(user_id=user_id).first()
         if not user:
@@ -334,13 +347,10 @@ def delete_user(user_id: str) -> bool:
         db.session.rollback()
         raise e
 
-
 def get_all_user_ids_from_memory():
     try:
         results = db.session.query(Memory.user_id).distinct().all()
         return [r[0] for r in results]
     except Exception as e:
-        print(f"[memory_service] 获取所有 user_id 失败: {e}")
+        logger.error(f"获取所有 user_id 失败: {e}")
         return []
-
-

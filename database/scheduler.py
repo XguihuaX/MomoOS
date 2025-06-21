@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
 from threading import Timer
 from .model import OwnerTypeEnum, StatusEnum
-
+from ..core.logger import logger
 
 def scan_pending_todos():
     from .services import search_todo
-    print("scheduler:正在重新扫描当日日程")
+    logger.info("scheduler:正在重新扫描当日日程")
     now = datetime.now()
     tomorrow_start = datetime(now.year, now.month, now.day) + timedelta(days=1)
 
@@ -16,7 +16,7 @@ def scan_pending_todos():
         due_start = now,
         due_end = tomorrow_start
     ) # type: ignore
-    print("scheduler:当日日程有")
+    logger.info("scheduler:当日日程有")
     valid_todos = []
     for todo in todos:
         if todo.owner_type not in [OwnerTypeEnum.alarm, OwnerTypeEnum.schedule]:
@@ -29,12 +29,12 @@ def scan_pending_todos():
 def register_todo_timer(todo):
     now = datetime.now()
     delay = (todo.due_time - now).total_seconds()
-    print(f"[⏰ 注册定时器] 任务：{todo.title} | delay={delay:.1f}s")
+    logger(f"[⏰ 注册定时器] 任务：{todo.title} | delay={delay:.1f}s")
     if delay > 0:
         Timer(delay, trigger_todo, args=[todo.id]).start()
-        print(f"[调度注册] {todo.title} 将在 {todo.due_time} 执行")
+        logger(f"[调度注册] {todo.title} 将在 {todo.due_time} 执行")
     else:
-        print(f"[补发执行] {todo.id} 的 {todo.description} 时间已过（{todo.due_time}），立即触发")
+        logger(f"[补发执行] {todo.id} 的 {todo.description} 时间已过（{todo.due_time}），立即触发")
         trigger_todo(todo.id)
 
 
@@ -71,7 +71,7 @@ def trigger_todo(todo_id: int):
 
             if tts_response.status_code == 200:
                 tts_data = tts_response.json()
-                print("[🔔 闹钟语音提醒]:", tts_data.get("text"))
+                logger("[🔔 闹钟语音提醒]:", tts_data.get("text"))
 
                 audio_base64 = tts_data.get("audio")
                 if audio_base64:
@@ -80,7 +80,7 @@ def trigger_todo(todo_id: int):
                         f.flush()
                         subprocess.run(["afplay", f.name])  # 播放音频
             else:
-                print("[⚠️ TTS请求失败]:", tts_response.text)
+                logger("[⚠️ TTS请求失败]:", tts_response.text)
 
         except Exception as e:
-            print(f"[❌ 闹钟 TTS 播放失败]: {e}")
+            logger(f"[❌ 闹钟 TTS 播放失败]: {e}")

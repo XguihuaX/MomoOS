@@ -3,12 +3,14 @@ from ..core.llm.qwen_api import call_qwen
 from ..type_hints.request_type import MCPInvokeRequest
 from ..type_hints.result_type import MCPResult
 from ..type_hints.interfaces import IAgent
+from ..core.logger import logger
+
 
 class SearchAgent(IAgent):
     
     def handle(self, message: MCPInvokeRequest) -> MCPResult:
         query = message.get("payload", {}).get("query", "")
-        print(f"[SearchAgent] 查询请求: {query}")
+        logger(f"查询请求:{query}")
 
         try:
             reply = call_qwen(

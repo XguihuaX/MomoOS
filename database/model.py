@@ -83,6 +83,6 @@ class Todo(db.Model):
 #user表
 class User(db.Model):
     __tablename__ = 'users'
-
-    user_id = db.Column(db.String(64), primary_key=True)
-    created_at = db.Column(db.DateTime, default=datetime.now)
+    user_id = db.Column(db.String(64), primary_key=True)  # 后端生成
+    user_name = db.Column(db.String(64))
+    create_time = db.Column(db.DateTime, default=datetime.utcnow)

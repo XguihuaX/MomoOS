@@ -1,5 +1,7 @@
 import requests
 from ..constants import QWEN_API_KEY, QWEN_API_URL
+from ..logger import logger
+
 
 def call_qwen(user_message, system_prompt="", model="qwen-plus", enable_search=True):
     """
@@ -46,7 +48,7 @@ def call_qwen(user_message, system_prompt="", model="qwen-plus", enable_search=T
         reply = data.get("choices", [{}])[0].get("message", {}).get("content", "")
         return reply or "很抱歉，我没有理解你的问题。"
     except Exception as e:
-        print(f"[Qwen调用失败]: {e}")
+        logger.error(f"[Qwen调用失败]: {e}")
         return "出现了一些问题，我暂时无法回答你的问题。"
 
 

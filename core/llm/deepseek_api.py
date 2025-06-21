@@ -2,6 +2,7 @@
 
 import requests
 from ..constants import DEEPSEEK_API_KEY, DEEPSEEK_API_URL
+from ..logger import logger
 
 def call_deepseek(user_message, system_prompt="", model="deepseek-chat"):
     """
@@ -37,5 +38,5 @@ def call_deepseek(user_message, system_prompt="", model="deepseek-chat"):
         reply = data.get("choices", [{}])[0].get("message", {}).get("content", "")
         return reply or "很抱歉，我没有理解你的问题。"
     except Exception as e:
-        print(f"[DeepSeek调用失败]: {e}")
+        logger.error(f"[DeepSeek调用失败]: {e}")
         return "出现了一些问题，我暂时无法回答你的问题。"

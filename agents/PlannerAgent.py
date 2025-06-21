@@ -28,7 +28,7 @@ class PlannerAgent:
         add_to_short_term(user_id, "user", user_text)
 
         plan = self._llm_plan(user_text, user_id)
-        logger.info("plan: %s", plan)
+        logger.info(f"plan: {plan}")
 
         message["payload"].setdefault("results", [])
         g.timer.mark("plannerAgent调用完成,开始分配任务")
@@ -38,12 +38,12 @@ class PlannerAgent:
             payload = agent_entry.get("payload", {})
 
             if agent_name not in ["MemoryAgent", "ToolAgent", "SearchAgent"]:
-                logger.warning("非法 Agent 名称: %s", agent_name)
+                logger.warning(f"非法 Agent 名称: {agent_name}")
                 continue
 
             agent = self.registry.get(agent_name)
             if not agent:
-                logger.warning("未注册的 Agent: %s", agent_name)
+                logger.warning(f"未注册的 Agent: {agent_name}")
                 continue
 
             task_message = {"agent": agent_name, "payload": payload}
@@ -68,7 +68,7 @@ class PlannerAgent:
                         "status": "error",
                         "raw_response": {"error": str(e)}
                     })
-                    logger.error("Agent 处理异常: %s", e)
+                    logger.error(f"Agent 处理异常: {e}")
 
         return self.registry.get("ChatAgent").handle(message)
 
@@ -92,7 +92,7 @@ class PlannerAgent:
             if isinstance(plan, list) and all(isinstance(x, dict) and "agent" in x for x in plan):
                 return plan
             else:
-                logger.error("返回内容格式不正确:", plan)
+                logger.error(f"返回内容格式不正确:{plan}", )
 
         except Exception as e:
             logger.error(f"解析 LLM 返回失败: {e} | 原始返回: {reply}")
