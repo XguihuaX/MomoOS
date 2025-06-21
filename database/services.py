@@ -1,11 +1,8 @@
-from database.model import Todo, Memory, personality, User, OwnerTypeEnum, StatusEnum, Memory_role, Memory_type,personality_type
-from sqlalchemy.orm import Session as SessionType
-from typing import Optional, List
-from database.init import db
-from typing import List, Optional
+from ..database.model import Todo, Memory, personality, User, OwnerTypeEnum, StatusEnum, Memory_role, Memory_type,personality_type
+from ..database.init import db
+from ..database.scheduler import start_scheduler
+from typing import Optional
 from datetime import datetime
-from plugins.Debouncer import Debouncer
-from database.scheduler import start_scheduler
 
 #todo_update_debouncer = Debouncer(3)
 ###------todo--------##
@@ -83,7 +80,7 @@ def search_todo(
     due_end: Optional[datetime] = None,
     created_start: Optional[datetime] = None,
     created_end: Optional[datetime] = None,
-) -> List[Todo]:
+) -> list[Todo]:
     query = db.session.query(Todo).filter(Todo.user_id == user_id)
 
     if id:
@@ -193,7 +190,7 @@ def search_memory(
     content: Optional[str] = None,
     start_time: Optional[datetime] = None,
     end_time: Optional[datetime] = None
-) -> List[Memory]:
+) -> list[Memory]:
     query = db.session.query(Memory).filter(Memory.user_id == user_id)
 
     if role:
@@ -265,7 +262,7 @@ def add_personality(
 
 
 # 查
-def search_personality(user_id: str, type: Optional[personality_type] = None, tag: Optional[str] = None) -> List[personality]:
+def search_personality(user_id: str, type: Optional[personality_type] = None, tag: Optional[str] = None) -> list[personality]:
     query = db.session.query(personality).filter_by(user_id=user_id)
     if type:
         query = query.filter_by(type=type)
@@ -292,7 +289,7 @@ def change_personality(user_id: str, type: personality_type, tag: str, content: 
         record = db.session.query(personality_type).filter_by(user_id=user_id, type=type, tag=tag).first()
         if not record:
             return False
-        record.content = content
+        record.content = content # type: ignore
         db.session.commit()
         return True
     except Exception as e:
@@ -320,7 +317,7 @@ def get_user_by_id(user_id: str) -> Optional[User]:
     return db.session.query(User).filter_by(user_id=user_id).first()
 
 
-def get_all_users() -> List[User]:
+def get_all_users() -> list[User]:
     return db.session.query(User).order_by(User.created_at.desc()).all()
 
 

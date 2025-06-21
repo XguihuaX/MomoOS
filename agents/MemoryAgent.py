@@ -1,12 +1,11 @@
 ##memoryAgent的作用是调取数据库信息   ##同时在每一次chatting结束以后看看是否要收录
-from database.services import *
+from ..database.services import *
 from ..type_hints.interfaces import IAgent
 from ..type_hints.request_type import MCPInvokeRequest
 from ..type_hints.result_type import MCPResult
 from ..core.short_memory.memory_buffer import get_short_term,clear_short_term
 from ..core.llm.deepseek_api import call_deepseek
 from ..core.constants import MEM_AGENT_PROMPT
-from MomoOS.server.flask_app import app
 
 
 class MemoryAgent(IAgent):
@@ -128,6 +127,7 @@ class MemoryAgent(IAgent):
 
 
     def summarize_and_save(self, user_id: str):
+        from ..server.flask_app import app
         with app.app_context():
             if user_id is None:
                 user_ids = get_all_user_ids_from_memory()

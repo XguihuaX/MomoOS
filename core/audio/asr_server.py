@@ -1,17 +1,14 @@
 from faster_whisper import WhisperModel
 from pydub import AudioSegment
+from ..constants import ASR_MODEL_PATH
 import opencc  # 👈 新增
-
 import os
 
 
-MODEL_PATH = "/workspace/ai_project/asr_model/faster-whisper-small/536b0662742c02347bc0e980a01041f333bce120"
+if not os.path.exists(ASR_MODEL_PATH):
+    raise FileNotFoundError(f"❌ 模型目录不存在：{ASR_MODEL_PATH}")
 
-
-if not os.path.exists(MODEL_PATH):
-    raise FileNotFoundError(f"❌ 模型目录不存在：{MODEL_PATH}")
-
-model = WhisperModel(MODEL_PATH, device="cuda", compute_type="float16")
+model = WhisperModel(str(ASR_MODEL_PATH), device="cuda", compute_type="float16")
 
 converter = opencc.OpenCC('t2s')  # 👈 繁体转简体
 
