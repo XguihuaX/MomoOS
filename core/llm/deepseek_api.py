@@ -1,9 +1,7 @@
 # utils/deepseek_api.py
 
 import requests
-
-DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions"
-DEEPSEEK_API_KEY = "sk-2d70d65cd074437395c11b27f4e7017c"
+from ..constants import DEEPSEEK_API_KEY, DEEPSEEK_API_URL
 
 def call_deepseek(user_message, system_prompt="", model="deepseek-chat"):
     """

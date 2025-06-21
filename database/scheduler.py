@@ -1,11 +1,12 @@
 from datetime import datetime,timedelta
+from database.services import search_todo
+from ..server.app import app
 from threading import Timer
 
 from database.model import OwnerTypeEnum, StatusEnum
 
 
 def scan_pending_todos():
-    from database.services import search_todo
     print("scheduler:正在重新扫描当日日程")
     now = datetime.now()
     tomorrow_start = datetime(now.year, now.month, now.day) + timedelta(days=1)
@@ -16,7 +17,7 @@ def scan_pending_todos():
         status=StatusEnum.pending,
         due_start = now,
         due_end = tomorrow_start
-    )
+    ) # type: ignore
     print("scheduler:当日日程有")
     valid_todos = []
     for todo in todos:
@@ -48,12 +49,11 @@ def start_scheduler():
 
 
 def trigger_todo(todo_id: int):
-    from app import app  # 💡 确保 app 可导入（避免循环 import）
     with app.app_context():  # ✅ 显式包一层
         from database.services import change_todo, search_todo
         import base64, tempfile, requests, subprocess
 
-        todos = search_todo(id=todo_id)
+        todos = search_todo(id=todo_id) # type: ignore
         if not todos:
             return
 
@@ -61,7 +61,7 @@ def trigger_todo(todo_id: int):
         if todo.status not in [StatusEnum.pending, StatusEnum.multiple]:
             return
 
-        change_todo(todo_id, status=StatusEnum.completed)
+        change_todo(todo_id, status=StatusEnum.completed) # type: ignore
 
         try:
             tts_response = requests.post("http://127.0.0.1:5001/api/tts", json={

@@ -1,13 +1,14 @@
-from agents.ToolAgent import ToolAgent
-from agents.MemoryAgent import MemoryAgent
-from agents.ChatAgent import ChatAgent
-from agents.SearchAgent import SearchAgent
+from ..agents.ToolAgent import ToolAgent
+from ..agents.MemoryAgent import MemoryAgent
+from ..agents.ChatAgent import ChatAgent
+from ..agents.SearchAgent import SearchAgent
+from ..type_hints.interfaces import IAgent
 
 class AgentRegistry:
     def __init__(self):
-        self._agents = {}
+        self._agents: dict[str, IAgent | None] = {}
 
-    def register(self, name: str, agent):
+    def register(self, name: str, agent: IAgent) -> None:
         """
         注册一个 Agent 实例。
         :param name: Agent 的唯一名称（如 "ToolAgent"）
@@ -15,7 +16,7 @@ class AgentRegistry:
         """
         self._agents[name] = agent
 
-    def get(self, name: str):
+    def get(self, name: str) -> IAgent | None:
         """
         根据名称获取注册的 Agent。
         :param name: Agent 名称
@@ -23,7 +24,7 @@ class AgentRegistry:
         """
         return self._agents.get(name)
 
-    def all(self):
+    def all(self) -> dict[str, IAgent | None]:
         """
         获取所有已注册的 Agent 字典。
         :return: dict[name] = agent

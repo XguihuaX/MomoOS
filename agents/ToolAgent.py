@@ -1,10 +1,13 @@
-# agents/ToolAgent.py
-from agents.BaseAgent import BaseAgent
-from core.message.mcp_message import build_message
-from utils import toolbox
 
-class ToolAgent(BaseAgent):
-    def handle(self, message: dict) -> dict:
+from ..type_hints.request_type import MCPInvokeRequest
+from ..type_hints.interfaces import IAgent
+from ..type_hints.result_type import MCPResult
+from ..core.message.mcp_message import build_message
+from ..utils import toolbox
+
+class ToolAgent(IAgent):
+
+    def handle(self, message: MCPInvokeRequest) -> MCPResult:
         payload = message.get("payload", {})
         func_name = payload.get("function")
         args = payload.get("args", {}) or {}
@@ -14,6 +17,8 @@ class ToolAgent(BaseAgent):
         args["user_id"] = user_id
         if not func_name:
             return build_message(
+                status="error",
+                mcp_type="command",
                 payload={
                     "user_id": user_id,
                     "tool_result": "未提供 function 名称",
@@ -32,6 +37,8 @@ class ToolAgent(BaseAgent):
             result = func(**args)
 
             return build_message(
+                status="success",
+                mcp_type="command",
                 payload={
                     "user_id": user_id,
                     "tool_result": result,
@@ -40,6 +47,8 @@ class ToolAgent(BaseAgent):
 
         except AttributeError:
             return build_message(
+                status="error",
+                mcp_type="command",
                 payload={
                     "user_id": user_id,
                     "tool_result": f"函数「{func_name}」不存在。",
@@ -47,6 +56,8 @@ class ToolAgent(BaseAgent):
             )
         except Exception as e:
             return build_message(
+                status="error",
+                mcp_type='command',
                 payload={
                     "user_id": user_id,
                     "tool_result": f"函数「{func_name}」执行出错：{str(e)}",

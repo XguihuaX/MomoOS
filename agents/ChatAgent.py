@@ -1,16 +1,18 @@
 # agents/ChatAgent.py
-from agents.BaseAgent import BaseAgent
+from ..type_hints.interfaces import IAgent
+from ..type_hints.request_type import MCPInvokeRequest
+from ..type_hints.result_type import MCPResult
 from core.llm.qwen_api import call_qwen
 from core.message.mcp_message import build_message
 from core.short_memory.memory_buffer import add_to_short_term,get_short_term
 import requests
-import logging
 from core.llm.prompt_state import prompt_manager
 from flask import g
-logger = logging.getLogger(__name__)
+from ..core.logger import logger
 
-class ChatAgent(BaseAgent):
-    def handle(self, message):
+class ChatAgent(IAgent):
+
+    def handle(self, message: MCPInvokeRequest) -> MCPResult:
         try:
             g.timer.mark("进入chatAgent")
             payload = message.get("payload", {})
@@ -27,7 +29,9 @@ class ChatAgent(BaseAgent):
 
             user_message = f"{history_message}消息：{inquiry}\n反馈：{mid_result}" if inquiry else mid_result
 
-
+            system_prompt = ""
+            emotion = ""
+            character = ""
             try:
                 cfg = prompt_manager.get_prompt(user_id)
                 system_prompt = cfg["system_prompt"]
@@ -61,6 +65,7 @@ class ChatAgent(BaseAgent):
             if tts_response.status_code == 200:
                 tts_data = tts_response.json()
                 return build_message(
+                    status="success",
                     payload={
                         "character": character,
                         "text": tts_data.get("text", llm_reply),
@@ -69,6 +74,7 @@ class ChatAgent(BaseAgent):
                 )
             else:
                 return build_message(
+                    status="error",
                     payload={
                         "character": character,
                         "text": llm_reply,
@@ -79,6 +85,7 @@ class ChatAgent(BaseAgent):
 
         except Exception as e:
             return build_message(
+                status="error",
                 payload={
                     "message": f"ChatAgent 出错: {str(e)}"
                 }
