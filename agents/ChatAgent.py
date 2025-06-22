@@ -17,10 +17,9 @@ class ChatAgent(IAgent):
         try:
             g.timer.mark("进入chatAgent")
             payload = message.get("payload", {})
-            mid_result = payload.get("results", None)
-            inquiry = payload.get("text", None)
-            user_id = message.get("payload", {}).get("user_id", "错误")
-            
+            mid_result = payload.get("args", {}).get("results", None)
+            inquiry = payload.get("args", {}).get("text", None)
+            user_id = payload.get("args", {}).get("user_id", "错误")
             
             short_memory = get_short_term(user_id)
             active_user_ids.add(user_id)

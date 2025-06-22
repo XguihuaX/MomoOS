@@ -7,7 +7,7 @@ from ..core.llm.deepseek_api import call_deepseek
 from ..core.constants import MEM_AGENT_PROMPT
 from ..core.logger import logger
 from ..core.active_user import active_user_ids  # ✅ 维护活跃用户ID
-from typing import Optional
+import json
 
 class MemoryAgent(IAgent):
 
@@ -156,7 +156,7 @@ class MemoryAgent(IAgent):
 
                 try:
                     summary_json = call_deepseek(_prompt).strip()
-                    result = eval(summary_json) if isinstance(summary_json, str) else summary_json
+                    result = json.loads(summary_json) if isinstance(summary_json, str) else summary_json
 
                     for item in result:
                         item["user_id"] = user_id
