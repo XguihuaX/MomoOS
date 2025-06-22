@@ -1,11 +1,11 @@
 """ 请求类型 """
 
-from typing import TypedDict
+from typing import TypedDict, Any, Optional
 
 class _MCPPayload(TypedDict):
     """ mcp负载 """
-    func: str
-    args: dict
+    func: Optional[str]
+    args: dict[str, Any]
 
 class MCPInvokeRequest(TypedDict):
     """ mcp调用请求类型 """

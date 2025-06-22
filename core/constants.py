@@ -2,7 +2,7 @@
 from pathlib import Path
 
 ASR_MODEL_PATH = Path(__file__).parent.parent / "asr_model" / "faster-whisper-small" / "536b0662742c02347bc0e980a01041f333bce120"
-
+NO_WAIT_FUNCTIONS = {"add_memory", "add_personality","add_todo","delete_memory","delete_personality", "delete_todo",}
 ### apis ###
 DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions"
 QWEN_API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
