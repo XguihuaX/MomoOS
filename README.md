@@ -89,9 +89,9 @@ pip install -r requirements.txt
 ## 📄 数据库表设计
 
 ### `users`
-
-* user\_id (PK)
-* created\_at
+* user_name
+* user_id (PK)
+* created_at
 
 ### `memory`
 
