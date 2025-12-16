@@ -2,7 +2,7 @@
 
 # 数据库连接信息
 SQLALCHEMY_DATABASE_URI = (
-    'mysql+pymysql://root:Skyler548114!@sh-cdb-ieebubfu.sql.tencentcdb.com:22002/ai_platform?charset=utf8mb4'
+    "mysql+pymysql://test1:Liu548114@rm-bp1118j593ykhua73.mysql.rds.aliyuncs.com:3306/momo?charset=utf8mb4"
 )
 
 
